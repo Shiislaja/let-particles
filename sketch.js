@@ -1,5 +1,3 @@
-// pridaj si p5.js a p5.svg.js (https://github.com/zenozeng/p5.js-svg)
-
 let particles = [];
 
 function setup() {
@@ -11,7 +9,6 @@ function setup() {
 function draw() {
   background(255);
 
-  // update & draw particles
   for (let p of particles) {
     p.update();
     p.display();
@@ -19,7 +16,6 @@ function draw() {
 }
 
 function mouseDragged() {
-  // vytvorenie novej "siete" vlákien pri pohybe myši
   for (let i = 0; i < 8; i++) {
     particles.push(new Particle(mouseX, mouseY));
   }
@@ -34,7 +30,7 @@ class Particle {
 
   update() {
     this.pos.add(this.vel);
-    this.vel.mult(0.98); // trocha spomalenie
+    this.vel.mult(0.98);
     this.life--;
   }
 
@@ -44,7 +40,6 @@ class Particle {
   }
 }
 
-// ak chceš uložiť do SVG, stlač klávesu 's'
 function keyPressed() {
   if (key === 's') {
     save("fibers.svg");
