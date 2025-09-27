@@ -1,15 +1,20 @@
 let fibers = [];
+let center;
 
 function setup() {
-  createCanvas(1920, 1080, SVG);
+  createCanvas(1080, 1080, SVG);
   background(255);
+
+  // stredová pozícia
+  center = createVector(width / 2, height / 2);
+
+  // inicializácia vlákien zo stredu
+  for (let i = 0; i < 200; i++) {
+    fibers.push(new Fiber(center.x, center.y));
+  }
+
   noFill();
   strokeCap(ROUND);
-
-  // pridajme veľa vlákien
-  for (let i = 0; i < 300; i++) {
-    fibers.push(new Fiber(random(width), random(height)));
-  }
 }
 
 function draw() {
@@ -18,10 +23,10 @@ function draw() {
     f.display();
   }
 
-  // stále pridávame nové vlákna pre dynamiku
-  if (frameCount % 50 === 0) {
-    for (let i = 0; i < 30; i++) {
-      fibers.push(new Fiber(random(width), random(height)));
+  // pridávaj nové vlákna zo stredu postupne
+  if (frameCount % 30 === 0) {
+    for (let i = 0; i < 20; i++) {
+      fibers.push(new Fiber(center.x, center.y));
     }
   }
 }
@@ -30,19 +35,26 @@ class Fiber {
   constructor(x, y) {
     this.pos = createVector(x, y);
     this.prev = this.pos.copy();
-    this.life = int(random(200, 600));
-    this.weight = random(0.2, 2.5);
-    this.col = color(120 + random(-40, 40), 0, 180 + random(-40, 40), 120);
+    this.life = int(random(150, 400));
+    this.weight = random(0.5, 2.5);
+    this.col = color(30, 150, 60, 150); // zelená (tráva)
     this.noff = createVector(random(1000), random(1000));
   }
 
   update() {
     this.prev = this.pos.copy();
-    let angle = noise(this.noff.x, this.noff.y) * TWO_PI * 4;
+
+    // Perlin noise riadi smer expanzie
+    let angle = noise(this.noff.x, this.noff.y) * TWO_PI * 2;
     let step = p5.Vector.fromAngle(angle);
-    step.mult(1.5);
+    step.mult(2); // rýchlosť rozťahovania
     this.pos.add(step);
-    this.noff.add(0.003, 0.003);
+
+    // jemný drift od centra
+    let dir = p5.Vector.sub(this.pos, center).normalize().mult(0.5);
+    this.pos.add(dir);
+
+    this.noff.add(0.01, 0.01);
     this.life--;
   }
 
@@ -55,6 +67,6 @@ class Fiber {
 
 function keyPressed() {
   if (key === 's') {
-    save("fluid-fibers.svg");
+    save("organic-expansion.svg");
   }
 }
