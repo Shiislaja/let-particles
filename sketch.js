@@ -1,61 +1,60 @@
-let curves = [];
+let fibers = [];
 
 function setup() {
-  createCanvas(1920, 1080, SVG); // 16:9 plátno
+  createCanvas(1920, 1080, SVG);
   background(255);
   noFill();
-  frameRate(30);
+  strokeCap(ROUND);
 
-  // na začiatku pridáme pár kriviek
-  for (let i = 0; i < 40; i++) {
-    curves.push(new Swirl(width/2, height/2));
+  // pridajme veľa vlákien
+  for (let i = 0; i < 300; i++) {
+    fibers.push(new Fiber(random(width), random(height)));
   }
 }
 
 function draw() {
-  // nečistíme background, aby ostávali stopy
-  for (let c of curves) {
-    c.update();
-    c.display();
+  for (let f of fibers) {
+    f.update();
+    f.display();
   }
 
-  // priebežne pridávaj nové krivky pre nekonečný pohyb
-  if (frameCount % 10 === 0) {
-    curves.push(new Swirl(width/2, height/2));
+  // stále pridávame nové vlákna pre dynamiku
+  if (frameCount % 50 === 0) {
+    for (let i = 0; i < 30; i++) {
+      fibers.push(new Fiber(random(width), random(height)));
+    }
   }
 }
 
-// trieda pre vírivú krivku
-class Swirl {
+class Fiber {
   constructor(x, y) {
-    this.start = createVector(x, y);
-    this.cp1 = p5.Vector.random2D().mult(random(200, 600)).add(this.start);
-    this.cp2 = p5.Vector.random2D().mult(random(200, 600)).add(this.start);
-    this.end = p5.Vector.random2D().mult(random(300, 800)).add(this.start);
-    this.life = int(random(120, 300));
-    this.weight = random(0.3, 2.5);
-    this.col = color(random(50, 200), 0, random(100, 255), 180);
+    this.pos = createVector(x, y);
+    this.prev = this.pos.copy();
+    this.life = int(random(200, 600));
+    this.weight = random(0.2, 2.5);
+    this.col = color(120 + random(-40, 40), 0, 180 + random(-40, 40), 120);
+    this.noff = createVector(random(1000), random(1000));
   }
 
   update() {
+    this.prev = this.pos.copy();
+    let angle = noise(this.noff.x, this.noff.y) * TWO_PI * 4;
+    let step = p5.Vector.fromAngle(angle);
+    step.mult(1.5);
+    this.pos.add(step);
+    this.noff.add(0.003, 0.003);
     this.life--;
   }
 
   display() {
     stroke(this.col);
     strokeWeight(this.weight);
-    bezier(
-      this.start.x, this.start.y,
-      this.cp1.x, this.cp1.y,
-      this.cp2.x, this.cp2.y,
-      this.end.x, this.end.y
-    );
+    line(this.prev.x, this.prev.y, this.pos.x, this.pos.y);
   }
 }
 
-// uloženie vektorového SVG
 function keyPressed() {
   if (key === 's') {
-    save("swirl-fibers.svg");
+    save("fluid-fibers.svg");
   }
 }
