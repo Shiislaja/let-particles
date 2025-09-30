@@ -1,11 +1,12 @@
 let fibers = [];
-let numFibers = 40;
-let center, radius;
+let numFibers = 80;
+let center, radius, ringRadius;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   center = createVector(width / 2, height / 2);
   radius = min(width, height) * 0.45;
+  ringRadius = radius * 0.5;
 
   for (let i = 0; i < numFibers; i++) {
     fibers.push(new Fiber(center.x, center.y));
@@ -14,15 +15,18 @@ function setup() {
   frameRate(30);
   stroke(30, 150, 60, 100); // zelená, polopriehľadná
   noFill();
+  textAlign(CENTER, CENTER);
 }
 
 function draw() {
-  background(255, 20); // jemné premazávanie, trail efekt
+  background(255, 20); // jemný fade efekt
 
   for (let f of fibers) {
     f.update();
     f.display();
   }
+
+  drawTextRing();
 }
 
 class Fiber {
@@ -56,5 +60,28 @@ class Fiber {
 
   display() {
     line(this.prev.x, this.prev.y, this.pos.x, this.pos.y);
+  }
+}
+
+// ─── Textový kruh ──────────────────────────────
+function drawTextRing() {
+  let word = "POSTDIGITAL";
+  let chars = word.split("");
+  let size = min(width, height) * 0.06;
+
+  textSize(size);
+  fill(30, 150, 60);
+  noStroke();
+
+  for (let i = 0; i < chars.length; i++) {
+    let angle = map(i, 0, chars.length, 0, TWO_PI) - HALF_PI;
+    let x = center.x + cos(angle) * ringRadius;
+    let y = center.y + sin(angle) * ringRadius;
+
+    push();
+    translate(x, y);
+    rotate(angle + HALF_PI);
+    text(chars[i], 0, 0);
+    pop();
   }
 }
