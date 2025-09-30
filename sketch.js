@@ -1,37 +1,47 @@
-let walkers = [];
-let numWalkers = 300; 
+let fibers = [];
 let center;
 let radius;
-let letters = "POSTDIGITAL".split("");
+let ringRadius;
 
 function setup() {
-  createCanvas(800, 800, SVG); 
-  center = createVector(width / 2, height / 2);
-  radius = width * 0.4;
+  createCanvas(1080, 1080, SVG);
+  background(255);
 
-  for (let i = 0; i < numWalkers; i++) {
-    walkers.push(new Walker(center.x, center.y));
+  center = createVector(width / 2, height / 2);
+  radius = width * 0.45;
+  ringRadius = radius * 0.5;
+
+  for (let i = 0; i < 80; i++) {   // menej vlákien pre ľahší SVG
+    fibers.push(new Fiber(center.x, center.y));
   }
 
   noFill();
-  stroke(34, 139, 34, 100);
-  strokeWeight(1.5);
+  strokeCap(ROUND);
+
+  drawTextRing();
 }
 
 function draw() {
-  for (let w of walkers) {
-    w.update();
-    w.display();
+  for (let f of fibers) {
+    f.update();
+    f.display();
   }
 
-  drawLetters();
+  // pomalšie pridávanie vlákien
+  if (frameCount % 80 === 0 && fibers.length < 200) {
+    for (let i = 0; i < 8; i++) {
+      fibers.push(new Fiber(center.x, center.y));
+    }
+  }
 }
 
-// ─── Walker ──────────────────────────────
-class Walker {
+class Fiber {
   constructor(x, y) {
     this.pos = createVector(x, y);
     this.prev = this.pos.copy();
+    this.life = int(random(80, 200));
+    this.weight = random(2, 4);
+    this.col = color(30, 150, 60, 160);
     this.noff = createVector(random(1000), random(1000));
   }
 
@@ -41,51 +51,64 @@ class Walker {
     let angle = noise(this.noff.x, this.noff.y) * TWO_PI * 2;
     angle += random(-0.05, 0.05);
 
-    // základný krok (náhodný pohyb)
-    let step = p5.Vector.fromAngle(angle).mult(1.2);
+    let step = p5.Vector.fromAngle(angle).mult(2.0);
     this.pos.add(step);
 
     // drift od stredu
-    let dir = p5.Vector.sub(this.pos, center).normalize().mult(0.8);
+    let dir = p5.Vector.sub(this.pos, center).normalize().mult(0.7);
 
-    // ✨ preferencia hornej polovice
+    // ✨ bias do hornej polovice
     if (this.pos.y > center.y) {
-      dir.mult(0.6);  // stále má drift, len slabší dole
+      // ak je dole, malý posun nahor
+      this.pos.y -= 0.8;
     } else {
-      dir.mult(1.2);  // posilnený drift hore
+      // ak je hore, podporíme expanziu
+      dir.mult(1.1);
     }
 
     this.pos.add(dir);
 
-    // posun Perlin noise offsetu
     this.noff.add(0.01, 0.01);
+    this.life--;
   }
 
   display() {
-    let d = dist(this.pos.x, this.pos.y, center.x, center.y);
-    if (d < radius * 0.9 && d > radius * 0.25) { 
-      line(this.pos.x, this.pos.y, this.prev.x, this.prev.y);
+    let d = p5.Vector.dist(this.pos, center);
+    let padding = 40;
+
+    // kresli len mimo textového prstenca
+    if (d < radius && (d < ringRadius - padding || d > ringRadius + padding)) {
+      stroke(this.col);
+      strokeWeight(this.weight);
+      line(this.prev.x, this.prev.y, this.pos.x, this.pos.y);
     }
   }
 }
 
-// ─── Textový kruh ──────────────────────────────
-function drawLetters() {
-  let ringRadius = radius * 0.35; 
+function drawTextRing() {
+  let word = "POSTDIGITAL";
+  let chars = word.split("");
+
   textAlign(CENTER, CENTER);
-  textSize(32);
-  fill(34, 139, 34);
+  textSize(60);
+  fill(30, 150, 60);
   noStroke();
 
-  for (let i = 0; i < letters.length; i++) {
-    let angle = map(i, 0, letters.length, 0, TWO_PI) - HALF_PI;
+  for (let i = 0; i < chars.length; i++) {
+    let angle = map(i, 0, chars.length, 0, TWO_PI) - HALF_PI;
     let x = center.x + cos(angle) * ringRadius;
     let y = center.y + sin(angle) * ringRadius;
 
     push();
     translate(x, y);
-    rotate(angle + HALF_PI); 
-    text(letters[i], 0, 0);
+    rotate(angle + HALF_PI);
+    text(chars[i], 0, 0);
     pop();
+  }
+}
+
+function keyPressed() {
+  if (key === 's') {
+    save("postdigital-circle-biasUp.svg");
   }
 }
