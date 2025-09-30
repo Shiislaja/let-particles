@@ -1,6 +1,7 @@
 let fibers = [];
 let numFibers = 80;
 let center, radius, ringRadius;
+let startTime;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -13,25 +14,29 @@ function setup() {
   }
 
   frameRate(30);
-  stroke(30, 150, 60, 120); // zelená, polopriehľadná
+  stroke(30, 150, 60, 180); // zelená, kontrastná
   strokeWeight(1.5);
   noFill();
   textAlign(CENTER, CENTER);
+
+  startTime = millis(); // uložíme čas začiatku
 }
 
 function draw() {
-  // slabší fade (nevymazáva hneď)
-  background(255, 8);
+  background(255);
 
+  // vlákna stále bežia
   for (let f of fibers) {
-    // každý walker urobí viac krokov v jednom frame
-    for (let s = 0; s < 3; s++) {
-      f.update();
-      f.display();
-    }
+    f.update();
+    f.display();
   }
 
-  drawTextRing();
+  // po 5 sekundách začni vykresľovať text
+  let elapsed = millis() - startTime;
+  if (elapsed > 5000) {
+    let progress = map(elapsed, 5000, 8000, 0, 1, true); // postupné odkrývanie
+    drawTextRing(progress);
+  }
 }
 
 class Fiber {
@@ -57,7 +62,7 @@ class Fiber {
 
     this.noff.add(0.01, 0.01);
 
-    // ak je ďaleko → pomaly pritiahnuť späť
+    // ak je ďaleko → pritiahnuť späť
     let d = dist(this.pos.x, this.pos.y, center.x, center.y);
     if (d > radius) {
       let back = p5.Vector.sub(center, this.pos).setMag(1.2);
@@ -71,7 +76,7 @@ class Fiber {
 }
 
 // ─── Textový kruh ──────────────────────────────
-function drawTextRing() {
+function drawTextRing(progress = 1) {
   let word = "POSTDIGITAL";
   let chars = word.split("");
   let size = min(width, height) * 0.06;
@@ -80,7 +85,9 @@ function drawTextRing() {
   fill(30, 150, 60);
   noStroke();
 
-  for (let i = 0; i < chars.length; i++) {
+  let visibleCount = floor(chars.length * progress);
+
+  for (let i = 0; i < visibleCount; i++) {
     let angle = map(i, 0, chars.length, 0, TWO_PI) - HALF_PI;
     let x = center.x + cos(angle) * ringRadius;
     let y = center.y + sin(angle) * ringRadius;
