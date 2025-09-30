@@ -1,41 +1,27 @@
 let fibers = [];
-let numFibers = 80;
-let center, radius, ringRadius;
-let startTime;
+let numFibers = 40;
+let center, radius;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   center = createVector(width / 2, height / 2);
   radius = min(width, height) * 0.45;
-  ringRadius = radius * 0.5;
 
   for (let i = 0; i < numFibers; i++) {
     fibers.push(new Fiber(center.x, center.y));
   }
 
   frameRate(30);
-  stroke(30, 150, 60, 180); // zelená, kontrastná
-  strokeWeight(1.5);
+  stroke(30, 150, 60, 100); // zelená, polopriehľadná
   noFill();
-  textAlign(CENTER, CENTER);
-
-  startTime = millis(); // uložíme čas začiatku
 }
 
 function draw() {
-  background(255);
+  background(255, 20); // jemné premazávanie, trail efekt
 
-  // vlákna stále bežia
   for (let f of fibers) {
     f.update();
     f.display();
-  }
-
-  // po 5 sekundách začni vykresľovať text
-  let elapsed = millis() - startTime;
-  if (elapsed > 5000) {
-    let progress = map(elapsed, 5000, 8000, 0, 1, true); // postupné odkrývanie
-    drawTextRing(progress);
   }
 }
 
@@ -56,46 +42,19 @@ class Fiber {
     this.pos.add(step);
 
     // jemný bias dohora
-    if (this.pos.y > center.y) {
-      this.pos.y -= 0.4;
-    }
+    let dir = p5.Vector.sub(this.pos, center).normalize().mult(0.5);
+    if (this.pos.y > center.y) this.pos.y -= 0.4;
+    this.pos.add(dir);
 
     this.noff.add(0.01, 0.01);
 
-    // ak je ďaleko → pritiahnuť späť
-    let d = dist(this.pos.x, this.pos.y, center.x, center.y);
-    if (d > radius) {
-      let back = p5.Vector.sub(center, this.pos).setMag(1.2);
-      this.pos.add(back);
+    // reset, ak sa dostane príliš ďaleko
+    if (dist(this.pos.x, this.pos.y, center.x, center.y) > radius) {
+      this.pos = center.copy();
     }
   }
 
   display() {
     line(this.prev.x, this.prev.y, this.pos.x, this.pos.y);
-  }
-}
-
-// ─── Textový kruh ──────────────────────────────
-function drawTextRing(progress = 1) {
-  let word = "POSTDIGITAL";
-  let chars = word.split("");
-  let size = min(width, height) * 0.06;
-
-  textSize(size);
-  fill(30, 150, 60);
-  noStroke();
-
-  let visibleCount = floor(chars.length * progress);
-
-  for (let i = 0; i < visibleCount; i++) {
-    let angle = map(i, 0, chars.length, 0, TWO_PI) - HALF_PI;
-    let x = center.x + cos(angle) * ringRadius;
-    let y = center.y + sin(angle) * ringRadius;
-
-    push();
-    translate(x, y);
-    rotate(angle + HALF_PI);
-    text(chars[i], 0, 0);
-    pop();
   }
 }
