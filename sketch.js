@@ -13,17 +13,22 @@ function setup() {
   }
 
   frameRate(30);
-  stroke(30, 150, 60, 100); // zelená, polopriehľadná
+  stroke(30, 150, 60, 120); // zelená, polopriehľadná
+  strokeWeight(1.5);
   noFill();
   textAlign(CENTER, CENTER);
 }
 
 function draw() {
-  background(255, 20); // jemný fade efekt
+  // slabší fade (nevymazáva hneď)
+  background(255, 8);
 
   for (let f of fibers) {
-    f.update();
-    f.display();
+    // každý walker urobí viac krokov v jednom frame
+    for (let s = 0; s < 3; s++) {
+      f.update();
+      f.display();
+    }
   }
 
   drawTextRing();
@@ -39,7 +44,6 @@ class Fiber {
   update() {
     this.prev = this.pos.copy();
 
-    // základný pohyb podľa perlin noise
     let angle = noise(this.noff.x, this.noff.y) * TWO_PI * 2;
     angle += random(-0.05, 0.05);
 
@@ -53,10 +57,10 @@ class Fiber {
 
     this.noff.add(0.01, 0.01);
 
-    // ak sa dostane ďaleko → pomaly pritiahni späť
+    // ak je ďaleko → pomaly pritiahnuť späť
     let d = dist(this.pos.x, this.pos.y, center.x, center.y);
     if (d > radius) {
-      let back = p5.Vector.sub(center, this.pos).setMag(1.5);
+      let back = p5.Vector.sub(center, this.pos).setMag(1.2);
       this.pos.add(back);
     }
   }
