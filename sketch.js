@@ -39,6 +39,7 @@ class Fiber {
   update() {
     this.prev = this.pos.copy();
 
+    // základný pohyb podľa perlin noise
     let angle = noise(this.noff.x, this.noff.y) * TWO_PI * 2;
     angle += random(-0.05, 0.05);
 
@@ -46,15 +47,17 @@ class Fiber {
     this.pos.add(step);
 
     // jemný bias dohora
-    let dir = p5.Vector.sub(this.pos, center).normalize().mult(0.5);
-    if (this.pos.y > center.y) this.pos.y -= 0.4;
-    this.pos.add(dir);
+    if (this.pos.y > center.y) {
+      this.pos.y -= 0.4;
+    }
 
     this.noff.add(0.01, 0.01);
 
-    // reset, ak sa dostane príliš ďaleko
-    if (dist(this.pos.x, this.pos.y, center.x, center.y) > radius) {
-      this.pos = center.copy();
+    // ak sa dostane ďaleko → pomaly pritiahni späť
+    let d = dist(this.pos.x, this.pos.y, center.x, center.y);
+    if (d > radius) {
+      let back = p5.Vector.sub(center, this.pos).setMag(1.5);
+      this.pos.add(back);
     }
   }
 
