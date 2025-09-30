@@ -5,7 +5,7 @@ let radius;
 let letters = "POSTDIGITAL".split("");
 
 function setup() {
-  createCanvas(800, 800, SVG); // menší canvas kvôli váhe SVG
+  createCanvas(800, 800, SVG); 
   center = createVector(width / 2, height / 2);
   radius = width * 0.4;
 
@@ -14,7 +14,7 @@ function setup() {
   }
 
   noFill();
-  stroke(34, 139, 34, 100); // zelená farba
+  stroke(34, 139, 34, 100);
   strokeWeight(1.5);
 }
 
@@ -41,17 +41,18 @@ class Walker {
     let angle = noise(this.noff.x, this.noff.y) * TWO_PI * 2;
     angle += random(-0.05, 0.05);
 
-    let step = p5.Vector.fromAngle(angle);
+    // základný krok (náhodný pohyb)
+    let step = p5.Vector.fromAngle(angle).mult(1.2);
     this.pos.add(step);
 
-    // drift smerom von
-    let dir = p5.Vector.sub(this.pos, center).normalize().mult(0.6);
+    // drift od stredu
+    let dir = p5.Vector.sub(this.pos, center).normalize().mult(0.8);
 
     // ✨ preferencia hornej polovice
     if (this.pos.y > center.y) {
-      dir.mult(0.3); // oslabiť drift dole
+      dir.mult(0.6);  // stále má drift, len slabší dole
     } else {
-      dir.mult(0.8); // posilniť drift hore
+      dir.mult(1.2);  // posilnený drift hore
     }
 
     this.pos.add(dir);
@@ -83,7 +84,7 @@ function drawLetters() {
 
     push();
     translate(x, y);
-    rotate(angle + HALF_PI); // ✨ otočenie písmen do kruhu
+    rotate(angle + HALF_PI); 
     text(letters[i], 0, 0);
     pop();
   }
